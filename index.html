@@ -15,6 +15,7 @@
     --text-dim: #888;
     --error: #e05c5c;
     --success: #4caf7d;
+    --warning: #f0a500;
     --radius: 12px;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -136,38 +137,46 @@
   }
   .confirm-box strong { color: var(--accent); display: block; margin-bottom: 4px; font-size: 15px; }
 
-  /* Loading overlay */
+  /* Loading */
   #loadingBox {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 32px 0 16px;
-    animation: fadeIn 0.3s ease;
+    display: none; flex-direction: column; align-items: center;
+    justify-content: center; padding: 32px 0 16px; animation: fadeIn 0.3s ease;
   }
   #loadingBox.show { display: flex; }
   .loading-spinner {
-    width: 44px;
-    height: 44px;
-    border: 3px solid rgba(33,150,196,0.2);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin-bottom: 16px;
+    width: 44px; height: 44px;
+    border: 3px solid rgba(33,150,196,0.2); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px;
   }
-  .loading-title {
-    font-size: 16px;
-    font-weight: 500;
-    color: var(--text);
-    margin-bottom: 6px;
-  }
-  .loading-sub {
-    font-size: 13px;
-    color: var(--text-dim);
-    text-align: center;
-    line-height: 1.5;
-  }
+  .loading-title { font-size: 16px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+  .loading-sub { font-size: 13px; color: var(--text-dim); text-align: center; line-height: 1.5; }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Countdown box */
+  #countdownBox {
+    display: none;
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-top: 20px;
+    background: rgba(240,165,0,0.08);
+    border: 1px solid rgba(240,165,0,0.25);
+    text-align: center;
+    animation: fadeIn 0.3s ease;
+  }
+  #countdownBox.show { display: block; }
+  .countdown-icon { font-size: 32px; margin-bottom: 12px; }
+  .countdown-title { font-size: 16px; font-weight: 600; color: var(--warning); margin-bottom: 8px; }
+  .countdown-msg { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin-bottom: 16px; }
+  .countdown-timer {
+    font-size: 36px; font-weight: 700; color: var(--warning);
+    font-family: 'Playfair Display', serif; letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .countdown-ready-at { font-size: 12px; color: var(--text-dim); }
+  .countdown-done {
+    font-size: 15px; font-weight: 500; color: var(--success);
+    margin-top: 8px;
+  }
 </style>
 </head>
 <body>
@@ -207,11 +216,23 @@
     <button class="btn-outline" onclick="goBack()">Edit Email</button>
   </div>
 
-  <!-- Loading state -->
+  <!-- Loading -->
   <div id="loadingBox">
     <div class="loading-spinner"></div>
     <div class="loading-title">Processing your order...</div>
     <div class="loading-sub">Please wait while we prepare your ebook.<br>This may take up to 15 seconds.</div>
+  </div>
+
+  <!-- Countdown -->
+  <div id="countdownBox">
+    <div class="countdown-icon">📦</div>
+    <div class="countdown-title">Your Order is Being Prepared!</div>
+    <div class="countdown-msg" id="countdownMsg"></div>
+    <div class="countdown-timer" id="countdownTimer">--:--</div>
+    <div class="countdown-ready-at" id="countdownReadyAt"></div>
+    <div class="countdown-done" id="countdownDone" style="display:none">
+      Your order is ready! Please fill in your email below to receive your ebook.
+    </div>
   </div>
 
   <div class="result" id="resultBox"></div>
@@ -224,6 +245,8 @@
 <script>
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzCVgc5v67MDIU15p3W3C3pmiEvxb_4MC1bfHHQSAyek9w8m7OiA2HYfznl5nBWS4g6/exec";
   const CS_MSG = "Please contact our customer service via Shopee chat and we will help you right away!";
+
+  let countdownInterval = null;
 
   const ERROR_MESSAGES = {
     not_found: {
@@ -258,6 +281,10 @@
       type: 'fail', icon: '⚠️', title: 'Something Went Wrong',
       msg: `An unexpected error occurred. ${CS_MSG}`
     },
+    not_ready: {
+      type: 'warning', icon: '⏳', title: 'Order Not Ready Yet',
+      msg: `Your order is still being prepared. Please wait for the countdown to finish before claiming your ebook.`
+    },
     default: {
       type: 'fail', icon: '⚠️', title: 'Something Went Wrong',
       msg: `An unexpected error occurred. ${CS_MSG}`
@@ -284,6 +311,7 @@
     document.getElementById('orderIdError').classList.remove('show');
     document.getElementById('emailError').classList.remove('show');
     document.getElementById('resultBox').classList.remove('show');
+    document.getElementById('countdownBox').classList.remove('show');
 
     if (!orderId) {
       document.getElementById('orderId').classList.add('error');
@@ -304,6 +332,8 @@
 
   function goBack() {
     document.getElementById('confirmStep').classList.remove('show');
+    document.getElementById('countdownBox').classList.remove('show');
+    if (countdownInterval) clearInterval(countdownInterval);
     document.getElementById('formStep').style.display = 'block';
   }
 
@@ -314,6 +344,53 @@
 
   function hideLoading() {
     document.getElementById('loadingBox').classList.remove('show');
+  }
+
+  function startCountdown(secondsLeft, bookCount) {
+    const readyAt = new Date(Date.now() + secondsLeft * 1000);
+
+    const formatTime = (h, m, s) => {
+      if (h > 0) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    };
+
+    const readyAtStr = readyAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    document.getElementById('countdownMsg').innerHTML =
+      `We are preparing your ${bookCount} book${bookCount > 1 ? 's' : ''} for shipment. ` +
+      `Please come back at <strong style="color:var(--warning)">${readyAtStr}</strong> to claim your ebook.`;
+
+    document.getElementById('countdownReadyAt').textContent = `Ready at ${readyAtStr}`;
+    document.getElementById('countdownBox').classList.add('show');
+    document.getElementById('countdownDone').style.display = 'none';
+
+    if (countdownInterval) clearInterval(countdownInterval);
+
+    countdownInterval = setInterval(() => {
+      secondsLeft--;
+
+      if (secondsLeft <= 0) {
+        clearInterval(countdownInterval);
+        document.getElementById('countdownTimer').textContent = '00:00';
+        document.getElementById('countdownDone').style.display = 'block';
+        document.getElementById('countdownMsg').innerHTML =
+          `Your order is ready! Please fill in your email below to receive your ebook.`;
+        // Show form again so they can submit
+        document.getElementById('formStep').style.display = 'block';
+        return;
+      }
+
+      const h = Math.floor(secondsLeft / 3600);
+      const m = Math.floor((secondsLeft % 3600) / 60);
+      const s = secondsLeft % 60;
+      document.getElementById('countdownTimer').textContent = formatTime(h, m, s);
+    }, 1000);
+
+    // Set initial display
+    const h = Math.floor(secondsLeft / 3600);
+    const m = Math.floor((secondsLeft % 3600) / 60);
+    const s = secondsLeft % 60;
+    document.getElementById('countdownTimer').textContent = formatTime(h, m, s);
   }
 
   function handleSubmit() {
@@ -343,10 +420,15 @@
     window[callbackName] = function(result) {
       cleanup();
       hideLoading();
+
       if (result.success) {
         showResult('success', '📬', 'Ebook Sent!',
           `Your ebook is on its way to <strong>${email}</strong>!<br><br>Please check your inbox — it should arrive within a few minutes. Do not forget to check your <strong>spam or junk folder</strong> too!<br><br>Enjoy your reading!`
         );
+      } else if (result.error === 'not_ready') {
+        // Show countdown
+        document.getElementById('confirmStep').classList.remove('show');
+        startCountdown(result.secondsLeft, result.bookCount);
       } else {
         const err = ERROR_MESSAGES[result.error] || ERROR_MESSAGES['default'];
         showResult(err.type, err.icon, err.title, err.msg);
