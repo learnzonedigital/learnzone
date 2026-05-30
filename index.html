@@ -107,14 +107,13 @@
   .btn:hover:not(:disabled) { background: #1a7fa8; box-shadow: 0 8px 24px rgba(33,150,196,0.3); }
   .btn:active:not(:disabled) { transform: scale(0.99); }
   .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-  .btn .spinner {
-    display: none; width: 16px; height: 16px;
-    border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
-    border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto;
+  .btn-outline {
+    width: 100%; padding: 13px; background: transparent; color: var(--text-dim);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer;
+    margin-top: 10px; transition: border-color 0.2s, color 0.2s;
   }
-  .btn.loading .btn-text { display: none; }
-  .btn.loading .spinner { display: block; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .btn-outline:hover { border-color: var(--text-dim); color: var(--text); }
   .result {
     display: none; border-radius: var(--radius); padding: 20px;
     margin-top: 20px; font-size: 14px; line-height: 1.6; animation: fadeIn 0.3s ease;
@@ -136,13 +135,39 @@
     font-size: 14px; color: var(--text-dim);
   }
   .confirm-box strong { color: var(--accent); display: block; margin-bottom: 4px; font-size: 15px; }
-  .btn-outline {
-    width: 100%; padding: 13px; background: transparent; color: var(--text-dim);
-    border: 1px solid var(--border); border-radius: var(--radius);
-    font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer;
-    margin-top: 10px; transition: border-color 0.2s, color 0.2s;
+
+  /* Loading overlay */
+  #loadingBox {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 0 16px;
+    animation: fadeIn 0.3s ease;
   }
-  .btn-outline:hover { border-color: var(--text-dim); color: var(--text); }
+  #loadingBox.show { display: flex; }
+  .loading-spinner {
+    width: 44px;
+    height: 44px;
+    border: 3px solid rgba(33,150,196,0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 16px;
+  }
+  .loading-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .loading-sub {
+    font-size: 13px;
+    color: var(--text-dim);
+    text-align: center;
+    line-height: 1.5;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -170,10 +195,7 @@
       <div class="error-msg" id="emailError">Please enter a valid email address (e.g. you@gmail.com).</div>
       <p class="hint">Your ebook will be sent to this address.</p>
     </div>
-    <button class="btn" id="continueBtn" onclick="handleContinue()">
-      <span class="btn-text">Continue</span>
-      <div class="spinner"></div>
-    </button>
+    <button class="btn" id="continueBtn" onclick="handleContinue()">Continue</button>
   </div>
 
   <div id="confirmStep">
@@ -181,11 +203,15 @@
       <strong id="confirmEmailDisplay"></strong>
       Please confirm this is your correct email. Your ebook will be sent here and <strong style="color:var(--error);display:inline">cannot be resent</strong> to a different address.
     </div>
-    <button class="btn" id="submitBtn" onclick="handleSubmit()">
-      <span class="btn-text">Yes, Send My Ebook</span>
-      <div class="spinner"></div>
-    </button>
+    <button class="btn" id="submitBtn" onclick="handleSubmit()">Yes, Send My Ebook</button>
     <button class="btn-outline" onclick="goBack()">Edit Email</button>
+  </div>
+
+  <!-- Loading state -->
+  <div id="loadingBox">
+    <div class="loading-spinner"></div>
+    <div class="loading-title">Processing your order...</div>
+    <div class="loading-sub">Please wait while we prepare your ebook.<br>This may take up to 15 seconds.</div>
   </div>
 
   <div class="result" id="resultBox"></div>
@@ -281,24 +307,29 @@
     document.getElementById('formStep').style.display = 'block';
   }
 
+  function showLoading() {
+    document.getElementById('confirmStep').classList.remove('show');
+    document.getElementById('loadingBox').classList.add('show');
+  }
+
+  function hideLoading() {
+    document.getElementById('loadingBox').classList.remove('show');
+  }
+
   function handleSubmit() {
     const orderId = document.getElementById('orderId').value.trim().toUpperCase();
     const email = document.getElementById('email').value.trim();
 
-    const btn = document.getElementById('submitBtn');
-    btn.classList.add('loading');
-    btn.disabled = true;
-    document.getElementById('confirmStep').classList.remove('show');
+    showLoading();
 
     const callbackName = 'lzCb_' + Date.now();
     const url = `${SCRIPT_URL}?orderId=${encodeURIComponent(orderId)}&email=${encodeURIComponent(email)}&callback=${callbackName}`;
 
     const timeout = setTimeout(() => {
+      hideLoading();
       showResult('fail', '⚠️', 'Request Timed Out',
         `Please try again. If the problem persists, ${CS_MSG}`
       );
-      btn.classList.remove('loading');
-      btn.disabled = false;
       cleanup();
     }, 15000);
 
@@ -311,6 +342,7 @@
 
     window[callbackName] = function(result) {
       cleanup();
+      hideLoading();
       if (result.success) {
         showResult('success', '📬', 'Ebook Sent!',
           `Your ebook is on its way to <strong>${email}</strong>!<br><br>Please check your inbox — it should arrive within a few minutes. Do not forget to check your <strong>spam or junk folder</strong> too!<br><br>Enjoy your reading!`
@@ -318,8 +350,6 @@
       } else {
         const err = ERROR_MESSAGES[result.error] || ERROR_MESSAGES['default'];
         showResult(err.type, err.icon, err.title, err.msg);
-        btn.classList.remove('loading');
-        btn.disabled = false;
       }
     };
 
