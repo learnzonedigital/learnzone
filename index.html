@@ -92,8 +92,8 @@
   .footer { margin-top: 28px; text-align: center; font-size: 12px; color: var(--text-dim); }
 
   /* Loading */
-  #loadingBox { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 32px 0 16px; animation: fadeIn 0.3s ease; }
-  #loadingBox.show { display: flex; }
+  .loading-box { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 32px 0 16px; animation: fadeIn 0.3s ease; }
+  .loading-box.show { display: flex; }
   .loading-spinner { width: 44px; height: 44px; border: 3px solid rgba(33,150,196,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
   .loading-title { font-size: 16px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
   .loading-sub { font-size: 13px; color: var(--text-dim); text-align: center; line-height: 1.5; }
@@ -106,11 +106,7 @@
   .countdown-title { font-size: 16px; font-weight: 600; color: var(--warning); margin-bottom: 10px; }
   .countdown-msg { font-size: 13px; color: var(--text-dim); line-height: 1.7; margin-bottom: 20px; }
   .countdown-timer { font-size: 42px; font-weight: 700; color: var(--warning); font-family: 'Playfair Display', serif; letter-spacing: 3px; margin-bottom: 8px; }
-  .countdown-ready-at { font-size: 12px; color: var(--text-dim); margin-bottom: 4px; }
-
-  /* Email step (shown after countdown done) */
-  #emailStep { display: none; animation: fadeIn 0.3s ease; margin-top: 20px; }
-  #emailStep.show { display: block; }
+  .countdown-ready-at { font-size: 12px; color: var(--text-dim); }
 
   /* Confirm step */
   #confirmStep { display: none; }
@@ -127,46 +123,41 @@
     <div class="logo-text">LearnZone</div>
   </div>
   <h1>Get Your Ebook</h1>
-  <p class="subtitle">Enter your Shopee Order ID to get started.</p>
+  <p class="subtitle">Enter your Shopee Order ID and email to receive your ebook.</p>
   <div class="divider"></div>
 
-  <!-- Step 1: Order ID only -->
+  <!-- Step 1: Order ID -->
   <div id="orderStep">
     <div class="field">
       <label>Shopee Order ID</label>
       <input type="text" id="orderId" placeholder="e.g. 260529N1Q25U6C" autocomplete="off" />
       <div class="error-msg" id="orderIdError">Please enter your Order ID.</div>
     </div>
-    <button class="btn" onclick="checkOrder()">Check My Order</button>
+    <button class="btn" onclick="checkOrder()">Continue</button>
   </div>
 
-  <!-- Loading -->
-  <div id="loadingBox">
+  <!-- Loading: checking order -->
+  <div class="loading-box" id="checkingBox">
     <div class="loading-spinner"></div>
-    <div class="loading-title" id="loadingTitle">Checking your order...</div>
-    <div class="loading-sub" id="loadingSub">Please wait a moment.</div>
+    <div class="loading-title">Checking your order...</div>
+    <div class="loading-sub">Please wait a moment.</div>
   </div>
 
-  <!-- Countdown (shown if not ready yet) -->
+  <!-- Countdown (6+ books only) -->
   <div id="countdownBox">
     <div class="countdown-icon">📦</div>
-    <div class="countdown-title">Your Order is Being Prepared!</div>
+    <div class="countdown-title">Almost Ready!</div>
     <div class="countdown-msg" id="countdownMsg"></div>
-    <div class="countdown-timer" id="countdownTimer">--:--:--</div>
+    <div class="countdown-timer" id="countdownTimer">00:00</div>
     <div class="countdown-ready-at" id="countdownReadyAt"></div>
   </div>
 
-  <!-- Step 2: Email (shown when ready) -->
-  <div id="emailStep">
-    <div class="result success show" style="margin-bottom:16px">
-      <span class="result-icon">✅</span>
-      <strong>Order Ready!</strong>
-      Your order has been verified. Please enter your email to receive your ebook.
-    </div>
+  <!-- Step 2: Email -->
+  <div id="emailStep" style="display:none">
     <div class="field">
       <label>Your Email Address</label>
       <input type="email" id="email" placeholder="you@example.com" autocomplete="off" />
-      <div class="error-msg" id="emailError">Please enter a valid email address (e.g. you@gmail.com).</div>
+      <div class="error-msg" id="emailError">Please enter a valid email (e.g. you@gmail.com).</div>
       <p class="hint">Your ebook will be sent to this address.</p>
     </div>
     <button class="btn" onclick="handleEmailContinue()">Continue</button>
@@ -176,14 +167,14 @@
   <div id="confirmStep">
     <div class="confirm-box">
       <strong id="confirmEmailDisplay"></strong>
-      Please confirm this is your correct email. Your ebook will be sent here and <strong style="color:var(--error);display:inline">cannot be resent</strong> to a different address.
+      Please confirm this is correct. Your ebook will be sent here and <strong style="color:var(--error);display:inline">cannot be resent</strong> to a different address.
     </div>
     <button class="btn" onclick="handleSubmit()">Yes, Send My Ebook</button>
     <button class="btn-outline" onclick="goBackToEmail()">Edit Email</button>
   </div>
 
-  <!-- Processing loading -->
-  <div id="processingBox" style="display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 0 16px;animation:fadeIn 0.3s ease">
+  <!-- Loading: processing -->
+  <div class="loading-box" id="processingBox">
     <div class="loading-spinner"></div>
     <div class="loading-title">Processing your order...</div>
     <div class="loading-sub">Please wait while we prepare your ebook.<br>This may take up to 15 seconds.</div>
@@ -199,11 +190,10 @@
 <script>
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzCVgc5v67MDIU15p3W3C3pmiEvxb_4MC1bfHHQSAyek9w8m7OiA2HYfznl5nBWS4g6/exec";
   const CS_MSG = "Please contact our customer service via Shopee chat and we will help you right away!";
-
   let countdownInterval = null;
 
   const ERROR_MESSAGES = {
-    not_found: { type: 'fail', icon: '❌', title: 'Order ID Not Found', msg: `We could not find this Order ID in our system. Please double-check and try again.<br><br>Still not working? ${CS_MSG}` },
+    not_found: { type: 'fail', icon: '❌', title: 'Order ID Not Found', msg: `We could not find this Order ID. Please double-check and try again.<br><br>Still not working? ${CS_MSG}` },
     already_sent: { type: 'warning', icon: '📬', title: 'Already Delivered', msg: `This order has already been sent! Check your inbox and spam folder.<br><br>Still cannot find it? ${CS_MSG}` },
     cancelled: { type: 'fail', icon: '🚫', title: 'Order Cancelled', msg: `This order has been cancelled.<br><br>If you think this is a mistake, ${CS_MSG}` },
     book_not_found: { type: 'fail', icon: '⚠️', title: 'Something Went Wrong', msg: `There was an issue processing your order. ${CS_MSG}` },
@@ -223,23 +213,20 @@
     return true;
   }
 
-  function showLoading(title, sub) {
+  function hideAll() {
     document.getElementById('orderStep').style.display = 'none';
-    document.getElementById('loadingTitle').textContent = title || 'Checking your order...';
-    document.getElementById('loadingSub').textContent = sub || 'Please wait a moment.';
-    document.getElementById('loadingBox').classList.add('show');
-  }
-
-  function hideLoading() {
-    document.getElementById('loadingBox').classList.remove('show');
+    document.getElementById('checkingBox').classList.remove('show');
+    document.getElementById('countdownBox').classList.remove('show');
+    document.getElementById('emailStep').style.display = 'none';
+    document.getElementById('confirmStep').classList.remove('show');
+    document.getElementById('processingBox').classList.remove('show');
+    document.getElementById('resultBox').classList.remove('show');
   }
 
   function checkOrder() {
     const orderId = document.getElementById('orderId').value.trim().toUpperCase();
-
     document.getElementById('orderId').classList.remove('error');
     document.getElementById('orderIdError').classList.remove('show');
-    document.getElementById('resultBox').classList.remove('show');
 
     if (!orderId) {
       document.getElementById('orderId').classList.add('error');
@@ -247,14 +234,14 @@
       return;
     }
 
-    showLoading('Checking your order...', 'Please wait a moment.');
+    hideAll();
+    document.getElementById('checkingBox').classList.add('show');
 
     const callbackName = 'lzCheck_' + Date.now();
-    // Pass a sentinel email to trigger check-only mode
     const url = `${SCRIPT_URL}?orderId=${encodeURIComponent(orderId)}&checkOnly=true&callback=${callbackName}`;
 
     const timeout = setTimeout(() => {
-      hideLoading();
+      hideAll();
       document.getElementById('orderStep').style.display = 'block';
       showResult('fail', '⚠️', 'Request Timed Out', `Please try again. ${CS_MSG}`);
       cleanup();
@@ -269,18 +256,12 @@
 
     window[callbackName] = function(result) {
       cleanup();
-      hideLoading();
+      hideAll();
 
       if (result.error === 'not_ready') {
-        // Show countdown
         showCountdown(result.secondsLeft, result.bookCount, result.readyAt);
-      } else if (result.error === 'ready' || result.status === 'Ready') {
-        // Order is ready — show email step
-        document.getElementById('emailStep').classList.add('show');
-      } else if (result.error === 'not_found' || result.error === 'cancelled' || result.error === 'already_sent') {
-        document.getElementById('orderStep').style.display = 'block';
-        const err = ERROR_MESSAGES[result.error] || ERROR_MESSAGES['default'];
-        showResult(err.type, err.icon, err.title, err.msg);
+      } else if (result.error === 'ready') {
+        document.getElementById('emailStep').style.display = 'block';
       } else {
         document.getElementById('orderStep').style.display = 'block';
         const err = ERROR_MESSAGES[result.error] || ERROR_MESSAGES['default'];
@@ -297,32 +278,27 @@
   function showCountdown(secondsLeft, bookCount, readyAtTimestamp) {
     if (countdownInterval) clearInterval(countdownInterval);
 
-    const readyAt = readyAtTimestamp ? new Date(readyAtTimestamp) : new Date(Date.now() + secondsLeft * 1000);
+    const readyAt = new Date(readyAtTimestamp);
     const readyAtStr = readyAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     document.getElementById('countdownMsg').innerHTML =
-      `We are preparing your <strong style="color:var(--warning)">${bookCount} book${bookCount > 1 ? 's' : ''}</strong> for shipment and verifying your order details.<br><br>` +
-      `Please come back at <strong style="color:var(--warning)">${readyAtStr}</strong> to claim your ebook.<br><br>` +
-      `<span style="font-size:12px;color:var(--text-dim)">This short wait ensures your order is fully processed and ready for delivery.</span>`;
+      `We are verifying your order of <strong style="color:var(--warning)">${bookCount} books</strong> to make sure you receive everything you ordered correctly.<br><br>` +
+      `Please come back at <strong style="color:var(--warning)">${readyAtStr}</strong> to claim your ebook.`;
 
     document.getElementById('countdownReadyAt').textContent = `Ready at ${readyAtStr}`;
     document.getElementById('countdownBox').classList.add('show');
 
     function tick() {
-      const now = Date.now();
-      const diff = Math.max(0, Math.ceil((readyAt - now) / 1000));
-
-      const h = Math.floor(diff / 3600);
-      const m = Math.floor((diff % 3600) / 60);
+      const diff = Math.max(0, Math.ceil((readyAt - Date.now()) / 1000));
+      const m = Math.floor(diff / 60);
       const s = diff % 60;
-
-      const pad = n => String(n).padStart(2, '0');
-      document.getElementById('countdownTimer').textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+      document.getElementById('countdownTimer').textContent =
+        `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 
       if (diff <= 0) {
         clearInterval(countdownInterval);
-        document.getElementById('countdownBox').classList.remove('show');
-        document.getElementById('emailStep').classList.add('show');
+        hideAll();
+        document.getElementById('emailStep').style.display = 'block';
       }
     }
 
@@ -332,7 +308,6 @@
 
   function handleEmailContinue() {
     const email = document.getElementById('email').value.trim();
-
     document.getElementById('email').classList.remove('error');
     document.getElementById('emailError').classList.remove('show');
 
@@ -342,28 +317,28 @@
       return;
     }
 
-    document.getElementById('emailStep').classList.remove('show');
+    hideAll();
     document.getElementById('confirmEmailDisplay').textContent = email;
     document.getElementById('confirmStep').classList.add('show');
   }
 
   function goBackToEmail() {
-    document.getElementById('confirmStep').classList.remove('show');
-    document.getElementById('emailStep').classList.add('show');
+    hideAll();
+    document.getElementById('emailStep').style.display = 'block';
   }
 
   function handleSubmit() {
     const orderId = document.getElementById('orderId').value.trim().toUpperCase();
     const email = document.getElementById('email').value.trim();
 
-    document.getElementById('confirmStep').classList.remove('show');
-    document.getElementById('processingBox').style.display = 'flex';
+    hideAll();
+    document.getElementById('processingBox').classList.add('show');
 
     const callbackName = 'lzSend_' + Date.now();
     const url = `${SCRIPT_URL}?orderId=${encodeURIComponent(orderId)}&email=${encodeURIComponent(email)}&callback=${callbackName}`;
 
     const timeout = setTimeout(() => {
-      document.getElementById('processingBox').style.display = 'none';
+      hideAll();
       showResult('fail', '⚠️', 'Request Timed Out', `Please try again. ${CS_MSG}`);
       cleanup();
     }, 15000);
@@ -377,11 +352,10 @@
 
     window[callbackName] = function(result) {
       cleanup();
-      document.getElementById('processingBox').style.display = 'none';
-
+      hideAll();
       if (result.success) {
         showResult('success', '📬', 'Ebook Sent!',
-          `Your ebook is on its way to <strong>${email}</strong>!<br><br>Please check your inbox — it should arrive within a few minutes. Do not forget to check your <strong>spam or junk folder</strong> too!<br><br>Enjoy your reading!`
+          `Your ebook is on its way to <strong>${email}</strong>!<br><br>Check your inbox — it should arrive within a few minutes. Do not forget to check your <strong>spam or junk folder</strong> too!<br><br>Enjoy your reading!`
         );
       } else {
         const err = ERROR_MESSAGES[result.error] || ERROR_MESSAGES['default'];
