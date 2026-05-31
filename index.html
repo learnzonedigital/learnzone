@@ -330,8 +330,13 @@ function submitSend() {
           Your ebook is on its way to <strong>${EMAIL}</strong>!<br><br>
           Check your inbox — it should arrive within a few minutes.
           Do not forget to check your <strong>spam or junk folder</strong> too!<br><br>
-          Enjoy your reading!
+          Enjoy your reading!<br><br>
+          ⭐ Happy with your purchase? Please take 5 seconds to leave us a
+          <a href="https://shopee.com.my/learnzone" target="_blank" style="color:var(--success);font-weight:600;text-decoration:underline">5-star rating on Shopee</a>
+          — it helps us grow and reach more readers like you!
         </div>
+        <button class="lz-btn-ghost" style="margin-top:12px" onclick="stepOrderId()">&#8592; Have another order? Go back</button>
+        
       `);
     } else {
       render(alertBox(r.error || '_default'));
