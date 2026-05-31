@@ -49,10 +49,10 @@
   .subtitle { color: var(--text-dim); font-size: 14px; font-weight: 300; margin-bottom: 28px; line-height: 1.6; text-align: center; }
   .divider { width: 40px; height: 2px; background: var(--accent); margin: 0 auto 28px; border-radius: 2px; }
   .footer { margin-top: 28px; text-align: center; font-size: 12px; color: var(--text-dim); }
+  .footer a { color: var(--accent); text-decoration: underline; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* All reusable UI pieces */
   .field { margin-bottom: 20px; }
   .lz-label { display: block; font-size: 11px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; }
   .lz-input {
@@ -82,13 +82,11 @@
   }
   .lz-btn-ghost:hover { border-color: var(--text-dim); color: var(--text); }
 
-  /* Loading */
   .lz-loading { display: flex; flex-direction: column; align-items: center; padding: 28px 0 12px; animation: fadeIn 0.3s ease; }
   .lz-spinner { width: 44px; height: 44px; border: 3px solid rgba(33,150,196,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
   .lz-loading-title { font-size: 16px; font-weight: 500; color: var(--text); margin-bottom: 4px; text-align: center; }
   .lz-loading-sub { font-size: 13px; color: var(--text-dim); text-align: center; line-height: 1.5; }
 
-  /* Alert boxes */
   .lz-alert { border-radius: var(--radius); padding: 20px; font-size: 14px; line-height: 1.6; animation: fadeIn 0.3s ease; margin-bottom: 16px; }
   .lz-alert .lz-alert-icon { font-size: 26px; display: block; margin-bottom: 8px; }
   .lz-alert .lz-alert-title { font-size: 15px; font-weight: 600; display: block; margin-bottom: 4px; }
@@ -96,12 +94,11 @@
   .lz-alert.fail { background: rgba(224,92,92,0.1); border: 1px solid rgba(224,92,92,0.3); color: var(--error); }
   .lz-alert.warning { background: rgba(33,150,196,0.1); border: 1px solid rgba(33,150,196,0.3); color: var(--accent); }
   .lz-alert.waiting { background: rgba(240,165,0,0.08); border: 1px solid rgba(240,165,0,0.25); color: var(--warning); text-align: center; }
+  .lz-alert a { color: inherit; font-weight: 600; text-decoration: underline; }
 
-  /* Countdown */
   .lz-countdown { font-size: 44px; font-weight: 700; font-family: 'Playfair Display', serif; letter-spacing: 3px; margin: 14px 0 6px; }
   .lz-countdown-sub { font-size: 12px; opacity: 0.8; }
 
-  /* Confirm box */
   .lz-confirm-box { background: rgba(33,150,196,0.08); border: 1px solid rgba(33,150,196,0.2); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; font-size: 14px; color: var(--text-dim); }
   .lz-confirm-email { color: var(--accent); font-size: 15px; font-weight: 600; display: block; margin-bottom: 6px; word-break: break-all; }
 </style>
@@ -117,25 +114,45 @@
   <p class="subtitle">Enter your Shopee Order ID to get started.</p>
   <div class="divider"></div>
   <div id="app"></div>
-  <div class="footer">Problem with your order? Contact our <a href="https://shopee.com.my/learnzone" target="_blank" style="color:var(--accent);text-decoration:underline">customer service</a> via Shopee chat.</div>
+  <div class="footer">
+    Problem with your order?<br>
+    Contact our <a href="https://shopee.com.my/learnzone" target="_blank">customer service</a> via Shopee chat.
+  </div>
 </div>
 
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzCVgc5v67MDIU15p3W3C3pmiEvxb_4MC1bfHHQSAyek9w8m7OiA2HYfznl5nBWS4g6/exec";
-const CS = "Please contact our customer service via Shopee chat and we will help you right away!";
+const CS = 'Please contact our <a href="https://shopee.com.my/learnzone" target="_blank">customer service</a> via Shopee chat and we will help you right away!';
 
 let ORDER_ID = '';
 let EMAIL = '';
 let cdTimer = null;
 let cbCounter = 0;
 
-// ─── render helper ───────────────────────────────
+const ERRORS = {
+  not_found:     { t:'fail',    i:'❌', h:'Order ID Not Found',   m:`We could not find this Order ID. Please double-check and try again.<br><br>${CS}` },
+  already_sent:  { t:'warning', i:'📬', h:'Already Delivered',    m:`This order has already been sent! Check your inbox and spam folder.<br><br>Still cannot find it? ${CS}` },
+  cancelled:     { t:'fail',    i:'🚫', h:'Order Cancelled',       m:`This order has been cancelled and cannot be claimed.<br><br>If you think this is a mistake, ${CS}` },
+  book_not_found:{ t:'fail',   i:'⚠️', h:'Something Went Wrong',  m:`There was an issue processing your order. ${CS}` },
+  file_too_large:{ t:'fail',   i:'⚠️', h:'Something Went Wrong',  m:`There was an issue processing your order. ${CS}` },
+  send_failed:   { t:'fail',   i:'⚠️', h:'Something Went Wrong',  m:`There was an issue sending your ebook. ${CS}` },
+  server_error:  { t:'fail',   i:'⚠️', h:'Something Went Wrong',  m:`An unexpected error occurred. ${CS}` },
+  _timeout:      { t:'fail',   i:'⏱️', h:'Request Timed Out',     m:`Please try again. ${CS}` },
+  _default:      { t:'fail',   i:'⚠️', h:'Something Went Wrong',  m:`An unexpected error occurred. ${CS}` },
+};
+
 function render(html) {
   if (cdTimer) { clearInterval(cdTimer); cdTimer = null; }
   document.getElementById('app').innerHTML = html;
 }
 
-// ─── JSONP call (unique ID every time) ───────────
+function validEmail(e) {
+  const p = e.split('@');
+  if (p.length !== 2) return false;
+  const d = p[1];
+  return d.includes('.') && !d.startsWith('.') && !d.endsWith('.') && p[0].length > 0;
+}
+
 function api(params, done) {
   const name = '__lz' + (++cbCounter) + '_' + Date.now();
   const qs = Object.entries(params).map(([k,v]) => k+'='+encodeURIComponent(v)).join('&');
@@ -160,42 +177,18 @@ function api(params, done) {
   document.body.appendChild(sc);
 }
 
-// ─── email validator ─────────────────────────────
-function validEmail(e) {
-  const p = e.split('@');
-  if (p.length !== 2) return false;
-  const d = p[1];
-  return d.includes('.') && !d.startsWith('.') && !d.endsWith('.') && p[0].length > 0;
+function backBtn() {
+  return `<button class="lz-btn-ghost" style="margin-top:12px" onclick="stepOrderId()">&#8592; Have another order? Go back</button>`;
 }
 
-// ─── error messages ──────────────────────────────
-const ERRORS = {
-  not_found:    { t:'fail',    i:'❌', h:'Order ID Not Found',   m:`We could not find this Order ID. Please double-check and try again.<br><br>${CS}` },
-  already_sent: { t:'warning', i:'📬', h:'Already Delivered',    m:`This order has already been sent! Check your inbox and spam folder.<br><br>Still cannot find it? ${CS}` },
-  cancelled:    { t:'fail',    i:'🚫', h:'Order Cancelled',       m:`This order has been cancelled. If you think this is a mistake, ${CS}` },
-  book_not_found:{ t:'fail',   i:'⚠️', h:'Something Went Wrong', m:`There was an issue processing your order. ${CS}` },
-  file_too_large:{ t:'fail',   i:'⚠️', h:'Something Went Wrong', m:`There was an issue processing your order. ${CS}` },
-  send_failed:  { t:'fail',    i:'⚠️', h:'Something Went Wrong', m:`There was an issue sending your ebook. ${CS}` },
-  server_error: { t:'fail',    i:'⚠️', h:'Something Went Wrong', m:`An unexpected error occurred. ${CS}` },
-  _timeout:     { t:'fail',    i:'⏱️', h:'Request Timed Out',    m:`Please try again. ${CS}` },
-  _default:     { t:'fail',    i:'⚠️', h:'Something Went Wrong', m:`An unexpected error occurred. ${CS}` },
-};
-
-function alertBox(key, extra) {
-  const e = ERRORS[key] || ERRORS._default;
-  return `<div class="lz-alert ${e.t}">
-    <span class="lz-alert-icon">${e.i}</span>
-    <span class="lz-alert-title">${e.h}</span>
-    ${e.m}${extra||''}
-  </div>`;
-}
-
-// ════════════════════════════════════════════════
-// STEP 1 — Order ID
-// ════════════════════════════════════════════════
+// ════ STEP 1: Order ID ════
 function stepOrderId(errorKey) {
   render(`
-    ${errorKey ? alertBox(errorKey) : ''}
+    ${errorKey ? `<div class="lz-alert ${ERRORS[errorKey]?ERRORS[errorKey].t:'fail'}">
+      <span class="lz-alert-icon">${ERRORS[errorKey]?ERRORS[errorKey].i:'⚠️'}</span>
+      <span class="lz-alert-title">${ERRORS[errorKey]?ERRORS[errorKey].h:'Something Went Wrong'}</span>
+      ${ERRORS[errorKey]?ERRORS[errorKey].m:ERRORS._default.m}
+    </div>` : ''}
     <div class="field">
       <label class="lz-label">Shopee Order ID</label>
       <input class="lz-input" id="oid" placeholder="e.g. 260529N1Q25U6C" autocomplete="off" />
@@ -228,13 +221,12 @@ function submitOrderId() {
     if (!r) { stepOrderId('_timeout'); return; }
     if (r.error === 'not_ready') { stepCountdown(r.secondsLeft, r.bookCount, r.readyAt); }
     else if (r.error === 'ready') { stepEmail(); }
+    else if (r.error === 'cancelled') { stepCancelled(); }
     else { stepOrderId(r.error || '_default'); }
   });
 }
 
-// ════════════════════════════════════════════════
-// STEP 2a — Countdown (6+ books)
-// ════════════════════════════════════════════════
+// ════ STEP 2a: Countdown ════
 function stepCountdown(secsLeft, bookCount, readyAtMs) {
   const readyAt = new Date(readyAtMs);
   const readyAtStr = readyAt.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
@@ -248,7 +240,7 @@ function stepCountdown(secsLeft, bookCount, readyAtMs) {
       <div class="lz-countdown" id="cdTimer">--:--</div>
       <div class="lz-countdown-sub">Ready at ${readyAtStr}</div>
     </div>
-    <button class="lz-btn-ghost" style="margin-top:12px" onclick="stepOrderId()">&#8592; Have another order? Go back</button>
+    ${backBtn()}
   `);
 
   function tick() {
@@ -261,9 +253,20 @@ function stepCountdown(secsLeft, bookCount, readyAtMs) {
   cdTimer = setInterval(tick, 1000);
 }
 
-// ════════════════════════════════════════════════
-// STEP 2b — Ready + Email input
-// ════════════════════════════════════════════════
+// ════ STEP 2b: Cancelled ════
+function stepCancelled() {
+  render(`
+    <div class="lz-alert fail">
+      <span class="lz-alert-icon">🚫</span>
+      <span class="lz-alert-title">Order Cancelled</span>
+      This order has been cancelled and cannot be claimed.<br><br>
+      If you think this is a mistake, ${CS}
+    </div>
+    ${backBtn()}
+  `);
+}
+
+// ════ STEP 2c: Ready + Email ════
 function stepEmail() {
   render(`
     <div class="lz-alert success" style="margin-bottom:20px">
@@ -294,9 +297,7 @@ function submitEmail() {
   stepConfirm();
 }
 
-// ════════════════════════════════════════════════
-// STEP 3 — Confirm email
-// ════════════════════════════════════════════════
+// ════ STEP 3: Confirm ════
 function stepConfirm() {
   render(`
     <div class="lz-confirm-box">
@@ -309,9 +310,7 @@ function stepConfirm() {
   `);
 }
 
-// ════════════════════════════════════════════════
-// STEP 4 — Send
-// ════════════════════════════════════════════════
+// ════ STEP 4: Send ════
 function submitSend() {
   render(`
     <div class="lz-loading">
@@ -322,7 +321,10 @@ function submitSend() {
   `);
 
   api({ orderId: ORDER_ID, email: EMAIL }, r => {
-    if (!r) { render(alertBox('_timeout')); return; }
+    if (!r) {
+      render(`<div class="lz-alert fail"><span class="lz-alert-icon">⏱️</span><span class="lz-alert-title">Request Timed Out</span>Please try again. ${CS}</div>${backBtn()}`);
+      return;
+    }
     if (r.success) {
       render(`
         <div class="lz-alert success">
@@ -333,19 +335,21 @@ function submitSend() {
           Do not forget to check your <strong>spam or junk folder</strong> too!<br><br>
           Enjoy your reading!<br><br>
           ⭐ Happy with your purchase? Please take 5 seconds to leave us a
-          <a href="https://shopee.com.my/learnzone" target="_blank" style="color:var(--success);font-weight:600;text-decoration:underline">5-star rating on Shopee</a>
+          <a href="https://shopee.com.my/learnzone" target="_blank">5-star rating on Shopee</a>
           — it helps us grow and reach more readers like you!
         </div>
-        <button class="lz-btn-ghost" style="margin-top:12px" onclick="stepOrderId()">&#8592; Have another order? Go back</button>
-        
+        ${backBtn()}
       `);
+    } else if (r.error === 'cancelled') {
+      stepCancelled();
     } else {
-      render(alertBox(r.error || '_default'));
+      const err = ERRORS[r.error] || ERRORS._default;
+      render(`<div class="lz-alert ${err.t}"><span class="lz-alert-icon">${err.i}</span><span class="lz-alert-title">${err.h}</span>${err.m}</div>${backBtn()}`);
     }
   });
 }
 
-// ─── Start ───────────────────────────────────────
+// Start
 stepOrderId();
 </script>
 </body>
