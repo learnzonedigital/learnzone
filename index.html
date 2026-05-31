@@ -48,73 +48,62 @@
   h1 { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; line-height: 1.25; margin-bottom: 8px; text-align: center; }
   .subtitle { color: var(--text-dim); font-size: 14px; font-weight: 300; margin-bottom: 28px; line-height: 1.6; text-align: center; }
   .divider { width: 40px; height: 2px; background: var(--accent); margin: 0 auto 28px; border-radius: 2px; }
+  .footer { margin-top: 28px; text-align: center; font-size: 12px; color: var(--text-dim); }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* All reusable UI pieces */
   .field { margin-bottom: 20px; }
-  label { display: block; font-size: 11px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; }
-  input {
+  .lz-label { display: block; font-size: 11px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; }
+  .lz-input {
     width: 100%; background: var(--bg); border: 1px solid var(--border);
     border-radius: var(--radius); padding: 14px 16px; color: var(--text);
     font-family: 'DM Sans', sans-serif; font-size: 15px;
     transition: border-color 0.2s, box-shadow 0.2s; outline: none;
   }
-  input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(33,150,196,0.12); }
-  input.error { border-color: var(--error); box-shadow: 0 0 0 3px rgba(224,92,92,0.1); }
-  .error-msg { display: none; color: var(--error); font-size: 12px; margin-top: 6px; align-items: center; gap: 5px; }
-  .error-msg.show { display: flex; }
-  .hint { color: var(--text-dim); font-size: 12px; margin-top: 6px; }
-  .btn {
+  .lz-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(33,150,196,0.12); }
+  .lz-input.err { border-color: var(--error); box-shadow: 0 0 0 3px rgba(224,92,92,0.1); }
+  .lz-hint { color: var(--text-dim); font-size: 12px; margin-top: 6px; }
+  .lz-err-msg { display: none; color: var(--error); font-size: 12px; margin-top: 6px; }
+  .lz-err-msg.show { display: block; }
+  .lz-btn {
     width: 100%; padding: 15px; background: var(--accent); color: #fff;
     border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif;
     font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 8px;
-    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    transition: background 0.2s, transform 0.1s;
   }
-  .btn:hover:not(:disabled) { background: #1a7fa8; box-shadow: 0 8px 24px rgba(33,150,196,0.3); }
-  .btn:active:not(:disabled) { transform: scale(0.99); }
-  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-  .btn-outline {
+  .lz-btn:hover { background: #1a7fa8; }
+  .lz-btn:active { transform: scale(0.99); }
+  .lz-btn-ghost {
     width: 100%; padding: 13px; background: transparent; color: var(--text-dim);
     border: 1px solid var(--border); border-radius: var(--radius);
-    font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer;
-    margin-top: 10px; transition: border-color 0.2s, color 0.2s;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; margin-top: 10px;
+    transition: border-color 0.2s, color 0.2s;
   }
-  .btn-outline:hover { border-color: var(--text-dim); color: var(--text); }
-  .result {
-    display: none; border-radius: var(--radius); padding: 20px;
-    margin-top: 20px; font-size: 14px; line-height: 1.6; animation: fadeIn 0.3s ease;
-  }
-  .result.show { display: block; }
-  .result.success { background: rgba(76,175,125,0.1); border: 1px solid rgba(76,175,125,0.3); color: var(--success); }
-  .result.fail { background: rgba(224,92,92,0.1); border: 1px solid rgba(224,92,92,0.3); color: var(--error); }
-  .result.warning { background: rgba(33,150,196,0.1); border: 1px solid rgba(33,150,196,0.3); color: var(--accent); }
-  .result a { color: inherit; font-weight: 500; }
-  .result-icon { font-size: 28px; margin-bottom: 10px; display: block; }
-  .result strong { display: block; font-size: 16px; margin-bottom: 6px; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-  .footer { margin-top: 28px; text-align: center; font-size: 12px; color: var(--text-dim); }
+  .lz-btn-ghost:hover { border-color: var(--text-dim); color: var(--text); }
 
   /* Loading */
-  .loading-box { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 32px 0 16px; animation: fadeIn 0.3s ease; }
-  .loading-box.show { display: flex; }
-  .loading-spinner { width: 44px; height: 44px; border: 3px solid rgba(33,150,196,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
-  .loading-title { font-size: 16px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
-  .loading-sub { font-size: 13px; color: var(--text-dim); text-align: center; line-height: 1.5; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .lz-loading { display: flex; flex-direction: column; align-items: center; padding: 28px 0 12px; animation: fadeIn 0.3s ease; }
+  .lz-spinner { width: 44px; height: 44px; border: 3px solid rgba(33,150,196,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
+  .lz-loading-title { font-size: 16px; font-weight: 500; color: var(--text); margin-bottom: 4px; text-align: center; }
+  .lz-loading-sub { font-size: 13px; color: var(--text-dim); text-align: center; line-height: 1.5; }
 
-  /* Status box */
-  .status-box { border-radius: var(--radius); padding: 20px; margin-bottom: 20px; font-size: 14px; line-height: 1.6; animation: fadeIn 0.3s ease; }
-  .status-box.ready { background: rgba(76,175,125,0.1); border: 1px solid rgba(76,175,125,0.3); color: var(--success); }
-  .status-box.waiting { background: rgba(240,165,0,0.08); border: 1px solid rgba(240,165,0,0.25); color: var(--warning); text-align: center; }
-  .status-icon { font-size: 28px; margin-bottom: 10px; display: block; }
-  .status-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; display: block; }
-  .countdown-timer { font-size: 42px; font-weight: 700; font-family: 'Playfair Display', serif; letter-spacing: 3px; margin: 12px 0 8px; }
-  .countdown-sub { font-size: 12px; opacity: 0.8; }
+  /* Alert boxes */
+  .lz-alert { border-radius: var(--radius); padding: 20px; font-size: 14px; line-height: 1.6; animation: fadeIn 0.3s ease; margin-bottom: 16px; }
+  .lz-alert .lz-alert-icon { font-size: 26px; display: block; margin-bottom: 8px; }
+  .lz-alert .lz-alert-title { font-size: 15px; font-weight: 600; display: block; margin-bottom: 4px; }
+  .lz-alert.success { background: rgba(76,175,125,0.1); border: 1px solid rgba(76,175,125,0.3); color: var(--success); }
+  .lz-alert.fail { background: rgba(224,92,92,0.1); border: 1px solid rgba(224,92,92,0.3); color: var(--error); }
+  .lz-alert.warning { background: rgba(33,150,196,0.1); border: 1px solid rgba(33,150,196,0.3); color: var(--accent); }
+  .lz-alert.waiting { background: rgba(240,165,0,0.08); border: 1px solid rgba(240,165,0,0.25); color: var(--warning); text-align: center; }
 
-  /* Confirm step */
-  #confirmStep { display: none; }
-  #confirmStep.show { display: block; animation: fadeIn 0.3s ease; }
-  .confirm-box { background: rgba(33,150,196,0.08); border: 1px solid rgba(33,150,196,0.2); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; font-size: 14px; color: var(--text-dim); }
-  .confirm-box strong { color: var(--accent); display: block; margin-bottom: 4px; font-size: 15px; }
+  /* Countdown */
+  .lz-countdown { font-size: 44px; font-weight: 700; font-family: 'Playfair Display', serif; letter-spacing: 3px; margin: 14px 0 6px; }
+  .lz-countdown-sub { font-size: 12px; opacity: 0.8; }
 
-  .hidden { display: none !important; }
+  /* Confirm box */
+  .lz-confirm-box { background: rgba(33,150,196,0.08); border: 1px solid rgba(33,150,196,0.2); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; font-size: 14px; color: var(--text-dim); }
+  .lz-confirm-email { color: var(--accent); font-size: 15px; font-weight: 600; display: block; margin-bottom: 6px; word-break: break-all; }
 </style>
 </head>
 <body>
@@ -127,280 +116,231 @@
   <h1>Get Your Ebook</h1>
   <p class="subtitle">Enter your Shopee Order ID to get started.</p>
   <div class="divider"></div>
-
-  <!-- Step 1: Order ID -->
-  <div id="orderStep">
-    <div class="field">
-      <label>Shopee Order ID</label>
-      <input type="text" id="orderId" placeholder="e.g. 260529N1Q25U6C" autocomplete="off" />
-      <div class="error-msg" id="orderIdError">Please enter your Order ID.</div>
-    </div>
-    <button class="btn" onclick="checkOrder()">Check My Order</button>
-  </div>
-
-  <!-- Loading: checking -->
-  <div class="loading-box hidden" id="checkingBox">
-    <div class="loading-spinner"></div>
-    <div class="loading-title">Checking your order...</div>
-    <div class="loading-sub">Please wait a moment.</div>
-  </div>
-
-  <!-- Step 2: Status + email (shown after check) -->
-  <div id="statusEmailStep" class="hidden">
-    <!-- Status message (ready or countdown) -->
-    <div id="statusBox"></div>
-
-    <!-- Email field (only shown when ready) -->
-    <div id="emailFields" class="hidden">
-      <div class="field">
-        <label>Your Email Address</label>
-        <input type="email" id="email" placeholder="you@example.com" autocomplete="off" />
-        <div class="error-msg" id="emailError">Please enter a valid email (e.g. you@gmail.com).</div>
-        <p class="hint">Your ebook will be sent to this address.</p>
-      </div>
-      <button class="btn" onclick="handleEmailContinue()">Continue</button>
-    </div>
-  </div>
-
-  <!-- Step 3: Confirm email -->
-  <div id="confirmStep">
-    <div class="confirm-box">
-      <strong id="confirmEmailDisplay"></strong>
-      Please confirm this is correct. Your ebook will be sent here and <strong style="color:var(--error);display:inline">cannot be resent</strong> to a different address.
-    </div>
-    <button class="btn" onclick="handleSubmit()">Yes, Send My Ebook</button>
-    <button class="btn-outline" onclick="goBackToEmail()">Edit Email</button>
-  </div>
-
-  <!-- Loading: processing -->
-  <div class="loading-box hidden" id="processingBox">
-    <div class="loading-spinner"></div>
-    <div class="loading-title">Processing your order...</div>
-    <div class="loading-sub">Please wait while we prepare your ebook.<br>This may take up to 15 seconds.</div>
-  </div>
-
-  <div class="result hidden" id="resultBox"></div>
-
-  <div class="footer">
-    Problem with your order? Contact our customer service via Shopee chat.
-  </div>
+  <div id="app"></div>
+  <div class="footer">Problem with your order? Contact our customer service via Shopee chat.</div>
 </div>
 
 <script>
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzCVgc5v67MDIU15p3W3C3pmiEvxb_4MC1bfHHQSAyek9w8m7OiA2HYfznl5nBWS4g6/exec";
-  const CS_MSG = "Please contact our customer service via Shopee chat and we will help you right away!";
-  let countdownInterval = null;
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzCVgc5v67MDIU15p3W3C3pmiEvxb_4MC1bfHHQSAyek9w8m7OiA2HYfznl5nBWS4g6/exec";
+const CS = "Please contact our customer service via Shopee chat and we will help you right away!";
 
-  const ERROR_MESSAGES = {
-    not_found: { type: 'fail', icon: '❌', title: 'Order ID Not Found', msg: `We could not find this Order ID. Please double-check and try again.<br><br>Still not working? ${CS_MSG}` },
-    already_sent: { type: 'warning', icon: '📬', title: 'Already Delivered', msg: `This order has already been sent! Check your inbox and spam folder.<br><br>Still cannot find it? ${CS_MSG}` },
-    cancelled: { type: 'fail', icon: '🚫', title: 'Order Cancelled', msg: `This order has been cancelled.<br><br>If you think this is a mistake, ${CS_MSG}` },
-    book_not_found: { type: 'fail', icon: '⚠️', title: 'Something Went Wrong', msg: `There was an issue processing your order. ${CS_MSG}` },
-    file_too_large: { type: 'fail', icon: '⚠️', title: 'Something Went Wrong', msg: `There was an issue processing your order. ${CS_MSG}` },
-    send_failed: { type: 'fail', icon: '⚠️', title: 'Something Went Wrong', msg: `There was an issue sending your ebook. ${CS_MSG}` },
-    server_error: { type: 'fail', icon: '⚠️', title: 'Something Went Wrong', msg: `An unexpected error occurred. ${CS_MSG}` },
-    default: { type: 'fail', icon: '⚠️', title: 'Something Went Wrong', msg: `An unexpected error occurred. ${CS_MSG}` }
+let ORDER_ID = '';
+let EMAIL = '';
+let cdTimer = null;
+let cbCounter = 0;
+
+// ─── render helper ───────────────────────────────
+function render(html) {
+  if (cdTimer) { clearInterval(cdTimer); cdTimer = null; }
+  document.getElementById('app').innerHTML = html;
+}
+
+// ─── JSONP call (unique ID every time) ───────────
+function api(params, done) {
+  const name = '__lz' + (++cbCounter) + '_' + Date.now();
+  const qs = Object.entries(params).map(([k,v]) => k+'='+encodeURIComponent(v)).join('&');
+  const sid = 'lzs_' + cbCounter;
+
+  const tid = setTimeout(() => {
+    delete window[name];
+    const s = document.getElementById(sid); if(s) s.remove();
+    done(null);
+  }, 15000);
+
+  window[name] = r => {
+    clearTimeout(tid);
+    delete window[name];
+    const s = document.getElementById(sid); if(s) s.remove();
+    done(r);
   };
 
-  function show(id) { document.getElementById(id).classList.remove('hidden'); }
-  function hide(id) { document.getElementById(id).classList.add('hidden'); }
+  const sc = document.createElement('script');
+  sc.id = sid;
+  sc.src = SCRIPT_URL + '?' + qs + '&callback=' + name;
+  document.body.appendChild(sc);
+}
 
-  function hideAll() {
-    hide('orderStep');
-    hide('checkingBox');
-    hide('statusEmailStep');
-    hide('confirmStep');
-    hide('processingBox');
-    hide('resultBox');
-    if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+// ─── email validator ─────────────────────────────
+function validEmail(e) {
+  const p = e.split('@');
+  if (p.length !== 2) return false;
+  const d = p[1];
+  return d.includes('.') && !d.startsWith('.') && !d.endsWith('.') && p[0].length > 0;
+}
+
+// ─── error messages ──────────────────────────────
+const ERRORS = {
+  not_found:    { t:'fail',    i:'❌', h:'Order ID Not Found',   m:`We could not find this Order ID. Please double-check and try again.<br><br>${CS}` },
+  already_sent: { t:'warning', i:'📬', h:'Already Delivered',    m:`This order has already been sent! Check your inbox and spam folder.<br><br>Still cannot find it? ${CS}` },
+  cancelled:    { t:'fail',    i:'🚫', h:'Order Cancelled',       m:`This order has been cancelled. If you think this is a mistake, ${CS}` },
+  book_not_found:{ t:'fail',   i:'⚠️', h:'Something Went Wrong', m:`There was an issue processing your order. ${CS}` },
+  file_too_large:{ t:'fail',   i:'⚠️', h:'Something Went Wrong', m:`There was an issue processing your order. ${CS}` },
+  send_failed:  { t:'fail',    i:'⚠️', h:'Something Went Wrong', m:`There was an issue sending your ebook. ${CS}` },
+  server_error: { t:'fail',    i:'⚠️', h:'Something Went Wrong', m:`An unexpected error occurred. ${CS}` },
+  _timeout:     { t:'fail',    i:'⏱️', h:'Request Timed Out',    m:`Please try again. ${CS}` },
+  _default:     { t:'fail',    i:'⚠️', h:'Something Went Wrong', m:`An unexpected error occurred. ${CS}` },
+};
+
+function alertBox(key, extra) {
+  const e = ERRORS[key] || ERRORS._default;
+  return `<div class="lz-alert ${e.t}">
+    <span class="lz-alert-icon">${e.i}</span>
+    <span class="lz-alert-title">${e.h}</span>
+    ${e.m}${extra||''}
+  </div>`;
+}
+
+// ════════════════════════════════════════════════
+// STEP 1 — Order ID
+// ════════════════════════════════════════════════
+function stepOrderId(errorKey) {
+  render(`
+    ${errorKey ? alertBox(errorKey) : ''}
+    <div class="field">
+      <label class="lz-label">Shopee Order ID</label>
+      <input class="lz-input" id="oid" placeholder="e.g. 260529N1Q25U6C" autocomplete="off" />
+      <div class="lz-err-msg" id="oidErr">Please enter your Order ID.</div>
+    </div>
+    <button class="lz-btn" onclick="submitOrderId()">Check My Order</button>
+  `);
+  const inp = document.getElementById('oid');
+  if (inp) { inp.focus(); inp.addEventListener('keydown', e => { if(e.key==='Enter') submitOrderId(); }); }
+}
+
+function submitOrderId() {
+  const v = (document.getElementById('oid').value || '').trim().toUpperCase();
+  if (!v) {
+    document.getElementById('oid').classList.add('err');
+    document.getElementById('oidErr').classList.add('show');
+    return;
   }
+  ORDER_ID = v;
 
-  function validateEmail(email) {
-    const parts = email.split('@');
-    if (parts.length !== 2) return false;
-    const domain = parts[1];
-    if (!domain.includes('.')) return false;
-    if (domain.startsWith('.') || domain.endsWith('.')) return false;
-    if (parts[0].length === 0) return false;
-    return true;
+  render(`
+    <div class="lz-loading">
+      <div class="lz-spinner"></div>
+      <div class="lz-loading-title">Extracting your order...</div>
+      <div class="lz-loading-sub">We are verifying your order details.<br>Please wait a moment.</div>
+    </div>
+  `);
+
+  api({ orderId: ORDER_ID, checkOnly: 'true' }, r => {
+    if (!r) { stepOrderId('_timeout'); return; }
+    if (r.error === 'not_ready') { stepCountdown(r.secondsLeft, r.bookCount, r.readyAt); }
+    else if (r.error === 'ready') { stepEmail(); }
+    else { stepOrderId(r.error || '_default'); }
+  });
+}
+
+// ════════════════════════════════════════════════
+// STEP 2a — Countdown (6+ books)
+// ════════════════════════════════════════════════
+function stepCountdown(secsLeft, bookCount, readyAtMs) {
+  const readyAt = new Date(readyAtMs);
+  const readyAtStr = readyAt.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+
+  render(`
+    <div class="lz-alert waiting">
+      <span class="lz-alert-icon">📦</span>
+      <span class="lz-alert-title">Almost Ready!</span>
+      We are verifying your order of <strong>${bookCount} books</strong> to make sure you receive everything correctly.<br><br>
+      Please come back at <strong>${readyAtStr}</strong> to claim your ebook.
+      <div class="lz-countdown" id="cdTimer">--:--</div>
+      <div class="lz-countdown-sub">Ready at ${readyAtStr}</div>
+    </div>
+  `);
+
+  function tick() {
+    const diff = Math.max(0, Math.ceil((readyAt - Date.now()) / 1000));
+    const el = document.getElementById('cdTimer');
+    if (el) el.textContent = String(Math.floor(diff/60)).padStart(2,'0') + ':' + String(diff%60).padStart(2,'0');
+    if (diff <= 0) { clearInterval(cdTimer); cdTimer = null; stepEmail(); }
   }
+  tick();
+  cdTimer = setInterval(tick, 1000);
+}
 
-  function checkOrder() {
-    const orderId = document.getElementById('orderId').value.trim().toUpperCase();
-    document.getElementById('orderId').classList.remove('error');
-    document.getElementById('orderIdError').classList.remove('show');
+// ════════════════════════════════════════════════
+// STEP 2b — Ready + Email input
+// ════════════════════════════════════════════════
+function stepEmail() {
+  render(`
+    <div class="lz-alert success" style="margin-bottom:20px">
+      <span class="lz-alert-icon">✅</span>
+      <span class="lz-alert-title">Your Order is Ready!</span>
+      Your order has been verified. Please enter your email below to receive your ebook.
+    </div>
+    <div class="field">
+      <label class="lz-label">Your Email Address</label>
+      <input class="lz-input" id="eml" type="email" placeholder="you@example.com" autocomplete="off" />
+      <div class="lz-err-msg" id="emlErr">Please enter a valid email (e.g. you@gmail.com).</div>
+      <p class="lz-hint">Your ebook will be sent to this address.</p>
+    </div>
+    <button class="lz-btn" onclick="submitEmail()">Continue</button>
+  `);
+  const inp = document.getElementById('eml');
+  if (inp) { inp.focus(); inp.addEventListener('keydown', e => { if(e.key==='Enter') submitEmail(); }); }
+}
 
-    if (!orderId) {
-      document.getElementById('orderId').classList.add('error');
-      document.getElementById('orderIdError').classList.add('show');
-      return;
-    }
-
-    hideAll();
-    show('checkingBox');
-
-    const callbackName = 'lzCheck_' + Date.now();
-    const url = `${SCRIPT_URL}?orderId=${encodeURIComponent(orderId)}&checkOnly=true&callback=${callbackName}`;
-
-    const timeout = setTimeout(() => {
-      hideAll();
-      show('orderStep');
-      showResult('fail', '⚠️', 'Request Timed Out', `Please try again. ${CS_MSG}`);
-      cleanup();
-    }, 15000);
-
-    function cleanup() {
-      clearTimeout(timeout);
-      delete window[callbackName];
-      const s = document.getElementById('jsonp-script');
-      if (s) s.remove();
-    }
-
-    window[callbackName] = function(result) {
-      cleanup();
-      hideAll();
-
-      if (result.error === 'not_ready') {
-        showStatusEmail(false, result.secondsLeft, result.bookCount, result.readyAt);
-      } else if (result.error === 'ready') {
-        showStatusEmail(true, 0, 0, 0);
-      } else {
-        show('orderStep');
-        const err = ERROR_MESSAGES[result.error] || ERROR_MESSAGES['default'];
-        showResult(err.type, err.icon, err.title, err.msg);
-      }
-    };
-
-    const script = document.createElement('script');
-    script.id = 'jsonp-script';
-    script.src = url;
-    document.body.appendChild(script);
+function submitEmail() {
+  const v = (document.getElementById('eml').value || '').trim();
+  if (!v || !validEmail(v)) {
+    document.getElementById('eml').classList.add('err');
+    document.getElementById('emlErr').classList.add('show');
+    return;
   }
+  EMAIL = v;
+  stepConfirm();
+}
 
-  function showStatusEmail(isReady, secondsLeft, bookCount, readyAtTimestamp) {
-    show('statusEmailStep');
-    const statusBox = document.getElementById('statusBox');
+// ════════════════════════════════════════════════
+// STEP 3 — Confirm email
+// ════════════════════════════════════════════════
+function stepConfirm() {
+  render(`
+    <div class="lz-confirm-box">
+      <span class="lz-confirm-email">${EMAIL}</span>
+      Please confirm this is your correct email. Your ebook will be sent here and
+      <strong style="color:var(--error)">cannot be resent</strong> to a different address.
+    </div>
+    <button class="lz-btn" onclick="submitSend()">Yes, Send My Ebook</button>
+    <button class="lz-btn-ghost" onclick="stepEmail()">Edit Email</button>
+  `);
+}
 
-    if (isReady) {
-      // Show ready message + email fields
-      statusBox.innerHTML = `
-        <div class="status-box ready">
-          <span class="status-icon">✅</span>
-          <span class="status-title">Your Order is Ready!</span>
-          Your order has been verified and is ready for delivery. Please enter your email below to receive your ebook.
-        </div>`;
-      show('emailFields');
+// ════════════════════════════════════════════════
+// STEP 4 — Send
+// ════════════════════════════════════════════════
+function submitSend() {
+  render(`
+    <div class="lz-loading">
+      <div class="lz-spinner"></div>
+      <div class="lz-loading-title">Sending your ebook...</div>
+      <div class="lz-loading-sub">Please wait while we prepare and deliver your ebook.<br>This may take up to 15 seconds.</div>
+    </div>
+  `);
+
+  api({ orderId: ORDER_ID, email: EMAIL }, r => {
+    if (!r) { render(alertBox('_timeout')); return; }
+    if (r.success) {
+      render(`
+        <div class="lz-alert success">
+          <span class="lz-alert-icon">📬</span>
+          <span class="lz-alert-title">Ebook Sent!</span>
+          Your ebook is on its way to <strong>${EMAIL}</strong>!<br><br>
+          Check your inbox — it should arrive within a few minutes.
+          Do not forget to check your <strong>spam or junk folder</strong> too!<br><br>
+          Enjoy your reading!
+        </div>
+      `);
     } else {
-      // Show countdown, hide email fields
-      hide('emailFields');
-      const readyAt = new Date(readyAtTimestamp);
-      const readyAtStr = readyAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      statusBox.innerHTML = `
-        <div class="status-box waiting">
-          <span class="status-icon">📦</span>
-          <span class="status-title">Almost Ready!</span>
-          We are verifying your order of <strong>${bookCount} books</strong> to make sure you receive everything correctly.<br><br>
-          Please come back at <strong>${readyAtStr}</strong> to claim your ebook.
-          <div class="countdown-timer" id="countdownTimer">--:--</div>
-          <div class="countdown-sub">Ready at ${readyAtStr}</div>
-        </div>`;
-
-      function tick() {
-        const diff = Math.max(0, Math.ceil((readyAt - Date.now()) / 1000));
-        const m = Math.floor(diff / 60);
-        const s = diff % 60;
-        const timerEl = document.getElementById('countdownTimer');
-        if (timerEl) timerEl.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-
-        if (diff <= 0) {
-          clearInterval(countdownInterval);
-          countdownInterval = null;
-          // Countdown done — show ready state
-          statusBox.innerHTML = `
-            <div class="status-box ready">
-              <span class="status-icon">✅</span>
-              <span class="status-title">Your Order is Ready!</span>
-              Your order has been verified. Please enter your email below to receive your ebook.
-            </div>`;
-          show('emailFields');
-        }
-      }
-
-      tick();
-      countdownInterval = setInterval(tick, 1000);
+      render(alertBox(r.error || '_default'));
     }
-  }
+  });
+}
 
-  function handleEmailContinue() {
-    const email = document.getElementById('email').value.trim();
-    document.getElementById('email').classList.remove('error');
-    document.getElementById('emailError').classList.remove('show');
-
-    if (!email || !validateEmail(email)) {
-      document.getElementById('email').classList.add('error');
-      document.getElementById('emailError').classList.add('show');
-      return;
-    }
-
-    hide('statusEmailStep');
-    document.getElementById('confirmEmailDisplay').textContent = email;
-    show('confirmStep');
-  }
-
-  function goBackToEmail() {
-    hide('confirmStep');
-    show('statusEmailStep');
-  }
-
-  function handleSubmit() {
-    const orderId = document.getElementById('orderId').value.trim().toUpperCase();
-    const email = document.getElementById('email').value.trim();
-
-    hideAll();
-    show('processingBox');
-
-    const callbackName = 'lzSend_' + Date.now();
-    const url = `${SCRIPT_URL}?orderId=${encodeURIComponent(orderId)}&email=${encodeURIComponent(email)}&callback=${callbackName}`;
-
-    const timeout = setTimeout(() => {
-      hideAll();
-      showResult('fail', '⚠️', 'Request Timed Out', `Please try again. ${CS_MSG}`);
-      cleanup();
-    }, 15000);
-
-    function cleanup() {
-      clearTimeout(timeout);
-      delete window[callbackName];
-      const s = document.getElementById('jsonp-script');
-      if (s) s.remove();
-    }
-
-    window[callbackName] = function(result) {
-      cleanup();
-      hideAll();
-      if (result.success) {
-        showResult('success', '📬', 'Ebook Sent!',
-          `Your ebook is on its way to <strong>${email}</strong>!<br><br>Check your inbox — it should arrive within a few minutes. Do not forget to check your <strong>spam or junk folder</strong> too!<br><br>Enjoy your reading!`
-        );
-      } else {
-        const err = ERROR_MESSAGES[result.error] || ERROR_MESSAGES['default'];
-        showResult(err.type, err.icon, err.title, err.msg);
-      }
-    };
-
-    const script = document.createElement('script');
-    script.id = 'jsonp-script';
-    script.src = url;
-    document.body.appendChild(script);
-  }
-
-  function showResult(type, icon, title, message) {
-    const box = document.getElementById('resultBox');
-    box.className = `result ${type}`;
-    box.innerHTML = `<span class="result-icon">${icon}</span><strong>${title}</strong>${message}`;
-    show('resultBox');
-  }
+// ─── Start ───────────────────────────────────────
+stepOrderId();
 </script>
 </body>
 </html>
