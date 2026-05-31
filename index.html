@@ -99,20 +99,22 @@
   .loading-sub { font-size: 13px; color: var(--text-dim); text-align: center; line-height: 1.5; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Countdown */
-  #countdownBox { display: none; border-radius: var(--radius); padding: 24px; margin-top: 20px; background: rgba(240,165,0,0.08); border: 1px solid rgba(240,165,0,0.25); text-align: center; animation: fadeIn 0.3s ease; }
-  #countdownBox.show { display: block; }
-  .countdown-icon { font-size: 32px; margin-bottom: 12px; }
-  .countdown-title { font-size: 16px; font-weight: 600; color: var(--warning); margin-bottom: 10px; }
-  .countdown-msg { font-size: 13px; color: var(--text-dim); line-height: 1.7; margin-bottom: 20px; }
-  .countdown-timer { font-size: 42px; font-weight: 700; color: var(--warning); font-family: 'Playfair Display', serif; letter-spacing: 3px; margin-bottom: 8px; }
-  .countdown-ready-at { font-size: 12px; color: var(--text-dim); }
+  /* Status box */
+  .status-box { border-radius: var(--radius); padding: 20px; margin-bottom: 20px; font-size: 14px; line-height: 1.6; animation: fadeIn 0.3s ease; }
+  .status-box.ready { background: rgba(76,175,125,0.1); border: 1px solid rgba(76,175,125,0.3); color: var(--success); }
+  .status-box.waiting { background: rgba(240,165,0,0.08); border: 1px solid rgba(240,165,0,0.25); color: var(--warning); text-align: center; }
+  .status-icon { font-size: 28px; margin-bottom: 10px; display: block; }
+  .status-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; display: block; }
+  .countdown-timer { font-size: 42px; font-weight: 700; font-family: 'Playfair Display', serif; letter-spacing: 3px; margin: 12px 0 8px; }
+  .countdown-sub { font-size: 12px; opacity: 0.8; }
 
   /* Confirm step */
   #confirmStep { display: none; }
   #confirmStep.show { display: block; animation: fadeIn 0.3s ease; }
   .confirm-box { background: rgba(33,150,196,0.08); border: 1px solid rgba(33,150,196,0.2); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; font-size: 14px; color: var(--text-dim); }
   .confirm-box strong { color: var(--accent); display: block; margin-bottom: 4px; font-size: 15px; }
+
+  .hidden { display: none !important; }
 </style>
 </head>
 <body>
@@ -123,7 +125,7 @@
     <div class="logo-text">LearnZone</div>
   </div>
   <h1>Get Your Ebook</h1>
-  <p class="subtitle">Enter your Shopee Order ID and email to receive your ebook.</p>
+  <p class="subtitle">Enter your Shopee Order ID to get started.</p>
   <div class="divider"></div>
 
   <!-- Step 1: Order ID -->
@@ -133,34 +135,31 @@
       <input type="text" id="orderId" placeholder="e.g. 260529N1Q25U6C" autocomplete="off" />
       <div class="error-msg" id="orderIdError">Please enter your Order ID.</div>
     </div>
-    <button class="btn" onclick="checkOrder()">Continue</button>
+    <button class="btn" onclick="checkOrder()">Check My Order</button>
   </div>
 
-  <!-- Loading: checking order -->
-  <div class="loading-box" id="checkingBox">
+  <!-- Loading: checking -->
+  <div class="loading-box hidden" id="checkingBox">
     <div class="loading-spinner"></div>
     <div class="loading-title">Checking your order...</div>
     <div class="loading-sub">Please wait a moment.</div>
   </div>
 
-  <!-- Countdown (6+ books only) -->
-  <div id="countdownBox">
-    <div class="countdown-icon">📦</div>
-    <div class="countdown-title">Almost Ready!</div>
-    <div class="countdown-msg" id="countdownMsg"></div>
-    <div class="countdown-timer" id="countdownTimer">00:00</div>
-    <div class="countdown-ready-at" id="countdownReadyAt"></div>
-  </div>
+  <!-- Step 2: Status + email (shown after check) -->
+  <div id="statusEmailStep" class="hidden">
+    <!-- Status message (ready or countdown) -->
+    <div id="statusBox"></div>
 
-  <!-- Step 2: Email -->
-  <div id="emailStep" style="display:none">
-    <div class="field">
-      <label>Your Email Address</label>
-      <input type="email" id="email" placeholder="you@example.com" autocomplete="off" />
-      <div class="error-msg" id="emailError">Please enter a valid email (e.g. you@gmail.com).</div>
-      <p class="hint">Your ebook will be sent to this address.</p>
+    <!-- Email field (only shown when ready) -->
+    <div id="emailFields" class="hidden">
+      <div class="field">
+        <label>Your Email Address</label>
+        <input type="email" id="email" placeholder="you@example.com" autocomplete="off" />
+        <div class="error-msg" id="emailError">Please enter a valid email (e.g. you@gmail.com).</div>
+        <p class="hint">Your ebook will be sent to this address.</p>
+      </div>
+      <button class="btn" onclick="handleEmailContinue()">Continue</button>
     </div>
-    <button class="btn" onclick="handleEmailContinue()">Continue</button>
   </div>
 
   <!-- Step 3: Confirm email -->
@@ -174,13 +173,13 @@
   </div>
 
   <!-- Loading: processing -->
-  <div class="loading-box" id="processingBox">
+  <div class="loading-box hidden" id="processingBox">
     <div class="loading-spinner"></div>
     <div class="loading-title">Processing your order...</div>
     <div class="loading-sub">Please wait while we prepare your ebook.<br>This may take up to 15 seconds.</div>
   </div>
 
-  <div class="result" id="resultBox"></div>
+  <div class="result hidden" id="resultBox"></div>
 
   <div class="footer">
     Problem with your order? Contact our customer service via Shopee chat.
@@ -203,6 +202,19 @@
     default: { type: 'fail', icon: '⚠️', title: 'Something Went Wrong', msg: `An unexpected error occurred. ${CS_MSG}` }
   };
 
+  function show(id) { document.getElementById(id).classList.remove('hidden'); }
+  function hide(id) { document.getElementById(id).classList.add('hidden'); }
+
+  function hideAll() {
+    hide('orderStep');
+    hide('checkingBox');
+    hide('statusEmailStep');
+    hide('confirmStep');
+    hide('processingBox');
+    hide('resultBox');
+    if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+  }
+
   function validateEmail(email) {
     const parts = email.split('@');
     if (parts.length !== 2) return false;
@@ -211,16 +223,6 @@
     if (domain.startsWith('.') || domain.endsWith('.')) return false;
     if (parts[0].length === 0) return false;
     return true;
-  }
-
-  function hideAll() {
-    document.getElementById('orderStep').style.display = 'none';
-    document.getElementById('checkingBox').classList.remove('show');
-    document.getElementById('countdownBox').classList.remove('show');
-    document.getElementById('emailStep').style.display = 'none';
-    document.getElementById('confirmStep').classList.remove('show');
-    document.getElementById('processingBox').classList.remove('show');
-    document.getElementById('resultBox').classList.remove('show');
   }
 
   function checkOrder() {
@@ -235,14 +237,14 @@
     }
 
     hideAll();
-    document.getElementById('checkingBox').classList.add('show');
+    show('checkingBox');
 
     const callbackName = 'lzCheck_' + Date.now();
     const url = `${SCRIPT_URL}?orderId=${encodeURIComponent(orderId)}&checkOnly=true&callback=${callbackName}`;
 
     const timeout = setTimeout(() => {
       hideAll();
-      document.getElementById('orderStep').style.display = 'block';
+      show('orderStep');
       showResult('fail', '⚠️', 'Request Timed Out', `Please try again. ${CS_MSG}`);
       cleanup();
     }, 15000);
@@ -259,11 +261,11 @@
       hideAll();
 
       if (result.error === 'not_ready') {
-        showCountdown(result.secondsLeft, result.bookCount, result.readyAt);
+        showStatusEmail(false, result.secondsLeft, result.bookCount, result.readyAt);
       } else if (result.error === 'ready') {
-        document.getElementById('emailStep').style.display = 'block';
+        showStatusEmail(true, 0, 0, 0);
       } else {
-        document.getElementById('orderStep').style.display = 'block';
+        show('orderStep');
         const err = ERROR_MESSAGES[result.error] || ERROR_MESSAGES['default'];
         showResult(err.type, err.icon, err.title, err.msg);
       }
@@ -275,35 +277,59 @@
     document.body.appendChild(script);
   }
 
-  function showCountdown(secondsLeft, bookCount, readyAtTimestamp) {
-    if (countdownInterval) clearInterval(countdownInterval);
+  function showStatusEmail(isReady, secondsLeft, bookCount, readyAtTimestamp) {
+    show('statusEmailStep');
+    const statusBox = document.getElementById('statusBox');
 
-    const readyAt = new Date(readyAtTimestamp);
-    const readyAtStr = readyAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (isReady) {
+      // Show ready message + email fields
+      statusBox.innerHTML = `
+        <div class="status-box ready">
+          <span class="status-icon">✅</span>
+          <span class="status-title">Your Order is Ready!</span>
+          Your order has been verified and is ready for delivery. Please enter your email below to receive your ebook.
+        </div>`;
+      show('emailFields');
+    } else {
+      // Show countdown, hide email fields
+      hide('emailFields');
+      const readyAt = new Date(readyAtTimestamp);
+      const readyAtStr = readyAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    document.getElementById('countdownMsg').innerHTML =
-      `We are verifying your order of <strong style="color:var(--warning)">${bookCount} books</strong> to make sure you receive everything you ordered correctly.<br><br>` +
-      `Please come back at <strong style="color:var(--warning)">${readyAtStr}</strong> to claim your ebook.`;
+      statusBox.innerHTML = `
+        <div class="status-box waiting">
+          <span class="status-icon">📦</span>
+          <span class="status-title">Almost Ready!</span>
+          We are verifying your order of <strong>${bookCount} books</strong> to make sure you receive everything correctly.<br><br>
+          Please come back at <strong>${readyAtStr}</strong> to claim your ebook.
+          <div class="countdown-timer" id="countdownTimer">--:--</div>
+          <div class="countdown-sub">Ready at ${readyAtStr}</div>
+        </div>`;
 
-    document.getElementById('countdownReadyAt').textContent = `Ready at ${readyAtStr}`;
-    document.getElementById('countdownBox').classList.add('show');
+      function tick() {
+        const diff = Math.max(0, Math.ceil((readyAt - Date.now()) / 1000));
+        const m = Math.floor(diff / 60);
+        const s = diff % 60;
+        const timerEl = document.getElementById('countdownTimer');
+        if (timerEl) timerEl.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 
-    function tick() {
-      const diff = Math.max(0, Math.ceil((readyAt - Date.now()) / 1000));
-      const m = Math.floor(diff / 60);
-      const s = diff % 60;
-      document.getElementById('countdownTimer').textContent =
-        `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-
-      if (diff <= 0) {
-        clearInterval(countdownInterval);
-        hideAll();
-        document.getElementById('emailStep').style.display = 'block';
+        if (diff <= 0) {
+          clearInterval(countdownInterval);
+          countdownInterval = null;
+          // Countdown done — show ready state
+          statusBox.innerHTML = `
+            <div class="status-box ready">
+              <span class="status-icon">✅</span>
+              <span class="status-title">Your Order is Ready!</span>
+              Your order has been verified. Please enter your email below to receive your ebook.
+            </div>`;
+          show('emailFields');
+        }
       }
-    }
 
-    tick();
-    countdownInterval = setInterval(tick, 1000);
+      tick();
+      countdownInterval = setInterval(tick, 1000);
+    }
   }
 
   function handleEmailContinue() {
@@ -317,14 +343,14 @@
       return;
     }
 
-    hideAll();
+    hide('statusEmailStep');
     document.getElementById('confirmEmailDisplay').textContent = email;
-    document.getElementById('confirmStep').classList.add('show');
+    show('confirmStep');
   }
 
   function goBackToEmail() {
-    hideAll();
-    document.getElementById('emailStep').style.display = 'block';
+    hide('confirmStep');
+    show('statusEmailStep');
   }
 
   function handleSubmit() {
@@ -332,7 +358,7 @@
     const email = document.getElementById('email').value.trim();
 
     hideAll();
-    document.getElementById('processingBox').classList.add('show');
+    show('processingBox');
 
     const callbackName = 'lzSend_' + Date.now();
     const url = `${SCRIPT_URL}?orderId=${encodeURIComponent(orderId)}&email=${encodeURIComponent(email)}&callback=${callbackName}`;
@@ -371,8 +397,9 @@
 
   function showResult(type, icon, title, message) {
     const box = document.getElementById('resultBox');
-    box.className = `result ${type} show`;
+    box.className = `result ${type}`;
     box.innerHTML = `<span class="result-icon">${icon}</span><strong>${title}</strong>${message}`;
+    show('resultBox');
   }
 </script>
 </body>
