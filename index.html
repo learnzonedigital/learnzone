@@ -222,6 +222,8 @@ function submitOrderId() {
     if (r.error === 'not_ready') { stepCountdown(r.secondsLeft, r.bookCount, r.readyAt); }
     else if (r.error === 'ready') { stepEmail(); }
     else if (r.error === 'cancelled') { stepCancelled(); }
+    else if (r.error === 'already_sent') { stepAlreadySent(); }
+    else if (r.error === 'not_found') { stepNotFound(); }
     else { stepOrderId(r.error || '_default'); }
   });
 }
@@ -251,6 +253,32 @@ function stepCountdown(secsLeft, bookCount, readyAtMs) {
   }
   tick();
   cdTimer = setInterval(tick, 1000);
+}
+
+// ════ STEP 2b: Not Found ════
+function stepNotFound() {
+  render(`
+    <div class="lz-alert fail">
+      <span class="lz-alert-icon">❌</span>
+      <span class="lz-alert-title">Order ID Not Found</span>
+      We could not find this Order ID. Please double-check and try again.<br><br>
+      Still not working? ${CS}
+    </div>
+    ${backBtn()}
+  `);
+}
+
+// ════ STEP 2b: Already Sent ════
+function stepAlreadySent() {
+  render(`
+    <div class="lz-alert warning">
+      <span class="lz-alert-icon">📬</span>
+      <span class="lz-alert-title">Already Delivered</span>
+      This order has already been sent! Check your inbox and spam folder.<br><br>
+      Still cannot find it? ${CS}
+    </div>
+    ${backBtn()}
+  `);
 }
 
 // ════ STEP 2b: Cancelled ════
